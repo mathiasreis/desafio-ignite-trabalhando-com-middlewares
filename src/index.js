@@ -19,25 +19,59 @@ function checksExistsUserAccount(request, response, next) {
   }
 
   request.user = user;
+  // response.user = user;
 
   return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+ 
+  const numberOfTodos = user.todos.length;
+
+  if((numberOfTodos < 10 && user.pro === false) || user.pro === true) {
+    return next();
+  }
+
+  return response.status(403).json({ error: "Impossible to create a new todo, delete an existing todo or update your plan"});
+
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const user = users.find(user => user.username === username);
+  
+  if(!user) {
+    return response.status(404).json({ error: "User not found" });
+  }
+
+  const validateId = validate(id);
+
+  if(!validateId) {
+    return response.status(400).json({ error: "Id provided is not a valid uuid" });
+  }
+
+  const todo = user.todos.find(todo => todo.id === id);
+
+  if(!todo) {
+    return response.status(404).json({ error: "Todo not found" })
+  }
+
+  request.todo = todo;
+  request.user = user;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
   const { id } = request.params;
 
-  const user  = users.find(user => user.id === id);
+  const user = users.find(user => user.id === id);
 
   if(!user) {
-    return response.status(404).json({ error: "User not found with the id provided"});
+    return response.status(404).json({ error: "User not found with the id provided" });
   }
 
   request.user = user;
